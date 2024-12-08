@@ -1,0 +1,18 @@
+{
+  "domain": "eps_smart_pool_control",
+  "name": "EPS Smart Pool Control",
+  "codeowners": [
+    "@robsonke"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/robsonke/eps_smart_pool_control",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/robsonke/eps_smart_pool_control/issues",
+  "requirements": [],
+  "ssdp": [],
+  "supported_platforms": ["sensor", "binary_sensor"],
+  "version": "0.1.0",
+  "zeroconf": []
+}
