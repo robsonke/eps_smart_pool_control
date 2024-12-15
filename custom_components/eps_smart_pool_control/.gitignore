@@ -1,0 +1,9 @@
+*
+!.gitignore
+!hacs.json
+!LICENSE
+!README.md
+!custom_components/
+!custom_components/*
+!example/
+!example/*

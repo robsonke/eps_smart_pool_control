@@ -4,18 +4,29 @@ EPS Smart Pool Control is a custom component for Home Assistant that allows you 
 
 ## Features
 
-- Real-time data monitoring
-- Status overview
-- Configuration settings (TODO)
-- Customizable settings for lighting, timers, auxiliary controls, temperature, and more (TODO)
+- Status overview of the most important data fields
+- Update of PH and RX target values
+
+## Example data
+
+![Pool Control Device](https://github.com/robsonke/eps-smart-pool-control/blob/master/assets/eps-pool-example.jpg)
+
+### Todo
+- Configuration settings (implemented but not able to test)
+- Add tests with different sets of mock data
+- Customizable settings for lighting, timers, auxiliary controls, temperature, etc
+
 
 ## Disclaimer
 
 This is made with the best intentions but totally focussed on the situation that my device provides. Since I only control Ph and RX values with the EPS One Touch and not use any of the lighs, deck, aux, etc options. I'm open to extend this for other situations, please create an issue and provide your API responses.
+And, while developing the initial version, our pool was in winter sleep. I will retest this in Spring 2025.
 
 ## Supported devices
 
 - EPS One Touch (Salt)
+
+Note: share your API responses with me and I'll add it. Or create a pr.
 
 ## Installation
 

@@ -2,10 +2,10 @@
   "config": {
     "step": {
       "user": {
+        "title": "Configure EPS Smart Pool Control",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "api_key": "API Key",
+          "serialnumber": "Serial Number"
         }
       }
     },

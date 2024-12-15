@@ -1,4 +1,5 @@
-# FILE: binary_sensor.py
+"""The binary sensor implementation for the EPS Smart Pool Control integration."""
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
     binary_sensors = [
-        EpsBinarySensor(coordinator, "pool_error", "Pool Error", "error"),
-        EpsBinarySensor(coordinator, "empty_tank", "Empty Tank", "empty_tank"),
+        EpsBinarySensor(coordinator, "eps_pool_error", "Pool Error", "realtimedata", "error", "mdi:alert-circle"),
+        EpsBinarySensor(coordinator, "eps_empty_tank", "Empty Tank", "realtimedata", "empty_tank", "mdi:storage-tank-outline"),
+        EpsBinarySensor(coordinator, "eps_pool_dirty", "Pool Dirty", "configuration", "is_dirty", "mdi:liquid-spot"),
     ]
 
     async_add_entities(binary_sensors, update_before_add=True)
@@ -22,22 +24,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class EpsBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an EPS Smart Pool Control binary sensor."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, api_field: str):
+    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, data_key:str, api_field: str, icon: str):
         """Initialize the binary sensor."""
         super().__init__(coordinator)
-        self.api_field = api_field
+        self._data_key = data_key
+        self._api_field = api_field
         self._sensor_type = sensor_type
         self._attr_name = name
+        self._icon = icon
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.coordinator.data[self.api_field]
+        return self.coordinator.data[self._data_key][self._api_field]
 
     @property
     def unique_id(self):
         """Return a unique ID for the binary sensor."""
         return f"{self.coordinator.config_entry.entry_id}_{self._sensor_type}"
+
+    @property
+    def icon(self) -> str:
+        """Return the icon of the sensor."""
+        return self._icon
 
     @property
     def device_info(self):

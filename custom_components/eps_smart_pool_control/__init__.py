@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import COORDINATOR, DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up EPS Smart Pool Control from a config entry."""

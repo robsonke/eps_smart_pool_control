@@ -1,3 +1,4 @@
+"""The sensor implementation for the EPS Smart Pool Control integration."""
 from config.custom_components.eps_smart_pool_control.coordinator import (
     EpsDataUpdateCoordinator,
 )
@@ -14,20 +15,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     """Set up EPS Smart Pool Control sensor based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
-    # Skipped:
-    # {'tds_ppm': 0, 'pollution_degree_ppm': 0, 'conductivity': 0.0, 'clm_ppm': 0.0}
-
-    # binary sensor for error
+    # consider making the sensor conditionally to the device config, with fields such as:
+    # - water_level_sensor_available
+    # - deck_available
+    # - clm_sensor_available
 
     sensors = [
-        EpsSensor(coordinator, "pool_water_temperature", "Water Temperature", "°C", "water_temperature"),
-        EpsSensor(coordinator, "pool_ambient_temperature", "Ambient Temperature", "°C", "ambient_temperature"),
-        EpsSensor(coordinator, "pool_solar_temperature", "Solar Temperature", "°C", "solar_temperature"),
-        EpsSensor(coordinator, "pool_rx_level", "RX Level", None, "rx_actual"),
-        EpsSensor(coordinator, "pool_ph_level", "pH Level", None, "ph_actual"),
-        EpsSensor(coordinator, "pool_filterpump_current", "Filterpump Current", None, "filterpump_current"),
-        EpsSensor(coordinator, "imx_temperature", "IMX Temperature", "°C", "imx_temperature"),
-        EpsSensor(coordinator, "main_temperature", "Main Temperature", "°C", "main_temperature"),
+        EpsSensor(coordinator, "eps_pool_water_temperature", "Water Temperature", "°C", "realtimedata", "water_temperature", "mdi:thermometer"),
+        EpsSensor(coordinator, "eps_pool_ambient_temperature", "Ambient Temperature", "°C", "realtimedata", "ambient_temperature", "mdi:thermometer"),
+        EpsSensor(coordinator, "eps_pool_solar_temperature", "Solar Temperature", "°C", "realtimedata", "solar_temperature", "mdi:thermometer"),
+        EpsSensor(coordinator, "eps_pool_rx_level", "RX Level", None, "realtimedata", "rx_actual", "mdi:water-percent"),
+        EpsSensor(coordinator, "eps_pool_ph_level", "pH Level", None, "realtimedata", "ph_actual", "mdi:water-percent"),
+        EpsSensor(coordinator, "eps_pool_filterpump_current", "Filter Pump", None, "realtimedata", "filterpump_current", "mdi:water-pump"),
+        EpsSensor(coordinator, "eps_imx_temperature", "IMX Temperature", "°C", "realtimedata", "imx_temperature", "mdi:thermometer"),
+        EpsSensor(coordinator, "eps_main_temperature", "Main Temperature", "°C", "realtimedata", "main_temperature", "mdi:thermometer"),
+        EpsSensor(coordinator, "eps_pool_volume_m3", "Pool Volume", "M3", "configuration", "volume_pool_m3", "mdi:image-size-select-small"),
     ]
 
     async_add_entities(sensors, update_before_add=True)
@@ -35,32 +37,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class EpsSensor(CoordinatorEntity, SensorEntity):
     """Representation of an EPS Smart Pool Control sensor."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, unit_of_measurement: str, api_field: str):
+    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, unit_of_measurement: str, data_key: str, api_field: str, icon: str):
         """Initialize the sensor."""
         super().__init__(coordinator)
-
-        self.api_field = api_field
+        self._data_key = data_key
+        self._api_field = api_field
+        self._icon = icon
 
         self._sensor_type = sensor_type
         self._attr_name = name
         self._attr_unit_of_measurement = unit_of_measurement
 
-    # @callback
-    # def _handle_coordinator_update(self) -> None:
-    #     """Handle updated data from the coordinator."""
-    #     #print(self.coordinator.data)
-    #     self._attr_is_on = self.coordinator.data[self.api_field]
-    #     self.async_write_ha_state()
-
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data[self.api_field]
+        return self.coordinator.data[self._data_key][self._api_field]
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this entity."""
         return f"{self.coordinator.config_entry.entry_id}_{self._sensor_type}"
+
+    @property
+    def icon(self) -> str:
+        """Return the icon of the sensor."""
+        return self._icon
+
+    @property
+    def unit(self) -> str:
+        """Unit of this sensor."""
+        return self._attr_unit_of_measurement
 
     @property
     def device_info(self) -> DeviceInfo:
