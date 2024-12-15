@@ -1,3 +1,13 @@
-**/.DS_Store
-__pycache__/
-.vscode/
+# artifacts
+__pycache__
+.pytest*
+*.egg-info
+*/build/*
+*/dist/*
+
+
+# misc
+.coverage
+.vscode
+coverage.xml
+.ruff_cache

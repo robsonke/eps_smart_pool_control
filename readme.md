@@ -1,6 +1,8 @@
 # EPS Smart Pool Control
 
 EPS Smart Pool Control is a custom component for Home Assistant that allows you to monitor and control various aspects of your pool, including water temperature, pH levels, and pump settings.
+The devices and API's are made and maintained by [Europe Pool Supplies (EPS)](https://epsbv.eu/). This custom HA integration is totally independent and I have no connection with them, I'm just a happy user of their devices.
+They offer an online portal where you can monitor your pool as well, that's to be found here: https://owner.smartpoolcontrol.eu.
 
 ## Features
 
@@ -31,8 +33,8 @@ Note: share your API responses with me and I'll add it. Or create a pr.
 ## Installation
 
 Requirements:
-- API key (provided by EPS)
-- Your pool serialnumber
+- API key (provided by EPS, contact their support team)
+- Your pool serialnumber (can be found in [the online portal](https://owner.smartpoolcontrol.eu/login/))
 
 Steps:
 1. Ensure you have [HACS](https://hacs.xyz/) installed in your Home Assistant setup.
