@@ -1,14 +1,12 @@
 """The sensor implementation for the EPS Smart Pool Control integration."""
-from config.custom_components.eps_smart_pool_control.coordinator import (
-    EpsDataUpdateCoordinator,
-)
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import EpsDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):

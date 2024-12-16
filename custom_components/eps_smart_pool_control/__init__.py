@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from config.custom_components.eps_smart_pool_control.coordinator import (
-    EpsDataUpdateCoordinator,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import COORDINATOR, DOMAIN
+from .coordinator import EpsDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER]
 
