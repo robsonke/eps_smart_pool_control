@@ -1,15 +1,17 @@
 """The sensor implementation for the EPS Smart Pool Control integration."""
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control sensor based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -32,10 +34,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     async_add_entities(sensors, update_before_add=True)
 
+
 class EpsSensor(CoordinatorEntity, SensorEntity):
     """Representation of an EPS Smart Pool Control sensor."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, unit_of_measurement: str, data_key: str, api_field: str, icon: str):
+    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, unit_of_measurement: str, data_key: str, api_field: str, icon: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._data_key = data_key
@@ -47,7 +50,7 @@ class EpsSensor(CoordinatorEntity, SensorEntity):
         self._attr_unit_of_measurement = unit_of_measurement
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data[self._data_key][self._api_field]
 

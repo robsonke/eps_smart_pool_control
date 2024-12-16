@@ -1,8 +1,8 @@
-
 """The EpsDataUpdateCoordinator class which manages fetching data from the EPS Smart Pool Control API."""
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
+from typing import Never
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -12,10 +12,11 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class EpsDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the EPS Smart Pool Control API."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
         self.api_key = entry.data.get("api_key")
         self.serialnumber = entry.data.get("serialnumber")
@@ -28,36 +29,38 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=5),
         )
 
-    def _raise_update_failed(self, response):
-        raise UpdateFailed(f"Error fetching data: {response.status}")
+    def _raise_update_failed(self, response: any) -> Never:
+        msg = f"Error fetching data: {response.status}"
+        raise UpdateFailed(msg)
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Fetch data from the API."""
         return {
-                "realtimedata": await self._fetch_api_data("realtimedata"),
-                "status": await self._fetch_api_data("status"),
-                "configuration": await self._fetch_api_data("configuration"),
-                "settings": await self._fetch_api_data("settings"),
-            }
+            "realtimedata": await self._fetch_api_data("realtimedata"),
+            "status": await self._fetch_api_data("status"),
+            "configuration": await self._fetch_api_data("configuration"),
+            "settings": await self._fetch_api_data("settings"),
+        }
 
-    async def _fetch_api_data(self, path: str):
+    async def _fetch_api_data(self, path: str) -> any:
         """Fetch realtime data from the API."""
         try:
             async with self.hass.helpers.aiohttp_client.async_get_clientsession().get(
                 f"https://api.smartpoolcontrol.eu/publicapi/{path}?serialnumber={self.serialnumber}&api_key={self.api_key}"
             ) as response:
-                if response.status != 200:
+                if not response.ok:
                     self._raise_update_failed(response)
-                response = await response.json()
+                response_json = await response.json()
                 # the response can be a list
-                if isinstance(response, list):
-                    return response[0]
-                return response
+                if isinstance(response_json, list):
+                    return response_json[0]
+                return response_json
 
         except Exception as err:
-            raise UpdateFailed(f"Error fetching realtime data: {err}") from err
+            msg = f"Error fetching realtime data: {err}"
+            raise UpdateFailed(msg) from err
 
-    async def _push_api_data(self, endpoint: str, data: dict):
+    async def _push_api_data(self, endpoint: str, data: dict) -> any:
         """Push data to a specific API endpoint."""
         async with self.hass.helpers.aiohttp_client.async_get_clientsession().put(
             f"https://api.smartpoolcontrol.eu/publicapi/{endpoint}?serialnumber={self.serialnumber}&api_key={self.api_key}",
@@ -65,12 +68,11 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
         ) as response:
             return response
 
-    async def set_value(self, endpoint: str, data: dict):
+    async def set_value(self, endpoint: str, data: dict) -> None:
         """Set a value through the API."""
         # we need to build up the json body, which should be the original GET body with the modified value
         original_data = await self._fetch_api_data(endpoint)
         body = self._update_body(original_data, data)
-        print(body)
         # and we need the pool id for the PUT call
         pool_id = await self._get_pool_id()
         endpoint = f"{endpoint}/{pool_id}/"
@@ -78,20 +80,20 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
         # push the data
         response = await self._push_api_data(endpoint, body)
 
-        if response.status != 200:
+        if not response.ok:
             self._raise_update_failed(response)
         await self._async_update_data()
 
-    async def _get_pool_id(self):
+    async def _get_pool_id(self) -> str:
         """Get the pool id from the status endpoint."""
         async with self.hass.helpers.aiohttp_client.async_get_clientsession().get(
             f"https://api.smartpoolcontrol.eu/publicapi/status?serialnumber={self.serialnumber}&api_key={self.api_key}"
         ) as response:
-            if response.status != 200:
+            if not response.ok:
                 self._raise_update_failed(response)
             return (await response.json())[0]["id"]
 
-    def _update_body(self, original_data, data):
+    def _update_body(self, original_data: dict, data: dict) -> dict:
         for k, v in data.items():
             if isinstance(v, dict):
                 original_data[k] = self._update_body(original_data.get(k, {}), v)

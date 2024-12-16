@@ -3,13 +3,15 @@
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control binary sensor based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -21,10 +23,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     async_add_entities(binary_sensors, update_before_add=True)
 
+
 class EpsBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Representation of an EPS Smart Pool Control binary sensor."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, data_key:str, api_field: str, icon: str):
+    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, data_key: str, api_field: str, icon: str) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self._data_key = data_key
@@ -34,12 +37,12 @@ class EpsBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._icon = icon
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.coordinator.data[self._data_key][self._api_field]
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID for the binary sensor."""
         return f"{self.coordinator.config_entry.entry_id}_{self._sensor_type}"
 
@@ -49,7 +52,7 @@ class EpsBinarySensor(CoordinatorEntity, BinarySensorEntity):
         return self._icon
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         entry = self.coordinator.config_entry
         return {
@@ -59,4 +62,3 @@ class EpsBinarySensor(CoordinatorEntity, BinarySensorEntity):
             "model": f"Smart Pool Control - {entry.data.get("serialnumber")}",
             "via_device": (DOMAIN, entry.entry_id),
         }
-

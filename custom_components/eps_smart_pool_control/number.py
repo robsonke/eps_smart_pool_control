@@ -3,13 +3,15 @@
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control number based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -20,10 +22,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 
     async_add_entities(numbers, update_before_add=True)
 
+
 class EpsNumber(CoordinatorEntity, NumberEntity):
     """Representation of an EPS Smart Pool Control Number."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, data_key:str, api_field: str, icon: str, min_value: float, max_value: float):
+    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, data_key: str, api_field: str, icon: str, min_value: float, max_value: float) -> None:
         """Initialize the number entity."""
         super().__init__(coordinator)
         self._data_key = data_key
@@ -35,7 +38,7 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
         self._max_value = max_value
 
     @property
-    def state(self):
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
 
@@ -46,17 +49,16 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
         for index, key in enumerate(keys):
             if index == 0:
                 nested_data[key] = {}
-            elif index == len(keys)-1:
+            elif index == len(keys) - 1:
                 # last element, set the value
-                nested_data[keys[index-1]][key] = value
+                nested_data[keys[index - 1]][key] = value
             else:
-                nested_data[keys[index-1]][key] = {}
-        print(nested_data)
+                nested_data[keys[index - 1]][key] = {}
         await self.coordinator.set_value(self._data_key, nested_data)
         await self.coordinator.async_request_refresh()
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID for the binary sensor."""
         return f"{self.coordinator.config_entry.entry_id}_{self._sensor_type}"
 
@@ -66,17 +68,17 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
         return self._icon
 
     @property
-    def native_min_value(self):
+    def native_min_value(self) -> float:
         """Return the minimum value of the number entity."""
         return self._min_value
 
     @property
-    def native_max_value(self):
+    def native_max_value(self) -> float:
         """Return the maximum value of the number entity."""
         return self._max_value
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         entry = self.coordinator.config_entry
         return {
@@ -87,7 +89,7 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
             "via_device": (DOMAIN, entry.entry_id),
         }
 
-    def _get_nested_value(self, data: dict, key_path: str):
+    def _get_nested_value(self, data: dict, key_path: str) -> str:
         """Access nested dictionary fields using a dot-separated string."""
         keys = key_path.split(".")
         value = data
