@@ -48,6 +48,7 @@ class EpsSensor(CoordinatorEntity, SensorEntity):
         self._sensor_type = sensor_type
         self._attr_name = name
         self._attr_unit_of_measurement = unit_of_measurement
+        self.entity_id = f"sensor.{self._sensor_type}"
 
     @property
     def state(self) -> str:
@@ -67,6 +68,11 @@ class EpsSensor(CoordinatorEntity, SensorEntity):
     @property
     def unit(self) -> str:
         """Unit of this sensor."""
+        return self._attr_unit_of_measurement
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this sensor."""
         return self._attr_unit_of_measurement
 
     @property

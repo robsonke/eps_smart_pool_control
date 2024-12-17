@@ -35,6 +35,7 @@ class EpsBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._sensor_type = sensor_type
         self._attr_name = name
         self._icon = icon
+        self.entity_id = f"binary_sensor.{self._sensor_type}"
 
     @property
     def is_on(self) -> bool | None:

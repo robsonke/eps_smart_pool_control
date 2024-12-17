@@ -36,6 +36,7 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
         self._icon = icon
         self._min_value = min_value
         self._max_value = max_value
+        self.entity_id = f"number.{self._sensor_type}"
 
     @property
     def state(self) -> float | None:
