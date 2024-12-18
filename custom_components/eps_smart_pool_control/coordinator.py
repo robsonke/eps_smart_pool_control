@@ -1,11 +1,12 @@
 """The EpsDataUpdateCoordinator class which manages fetching data from the EPS Smart Pool Control API."""
 
-import logging
 from datetime import timedelta
+import logging
 from typing import Never
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -45,7 +46,8 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
     async def _fetch_api_data(self, path: str) -> any:
         """Fetch realtime data from the API."""
         try:
-            async with self.hass.helpers.aiohttp_client.async_get_clientsession().get(
+            session = async_get_clientsession(self.hass)
+            async with session.get(
                 f"https://api.smartpoolcontrol.eu/publicapi/{path}?serialnumber={self.serialnumber}&api_key={self.api_key}"
             ) as response:
                 if not response.ok:
@@ -62,7 +64,8 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _push_api_data(self, endpoint: str, data: dict) -> any:
         """Push data to a specific API endpoint."""
-        async with self.hass.helpers.aiohttp_client.async_get_clientsession().put(
+        session = async_get_clientsession(self.hass)
+        async with session.put(
             f"https://api.smartpoolcontrol.eu/publicapi/{endpoint}?serialnumber={self.serialnumber}&api_key={self.api_key}",
             json=data,
         ) as response:
@@ -86,7 +89,8 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _get_pool_id(self) -> str:
         """Get the pool id from the status endpoint."""
-        async with self.hass.helpers.aiohttp_client.async_get_clientsession().get(
+        session = async_get_clientsession(self.hass)
+        async with session.get(
             f"https://api.smartpoolcontrol.eu/publicapi/status?serialnumber={self.serialnumber}&api_key={self.api_key}"
         ) as response:
             if not response.ok:

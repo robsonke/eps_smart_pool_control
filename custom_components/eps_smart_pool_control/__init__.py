@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
 
 from .const import COORDINATOR, DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
@@ -14,6 +15,8 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.NUMBER]
+
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

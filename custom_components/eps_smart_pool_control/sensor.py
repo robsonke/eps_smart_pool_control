@@ -84,5 +84,4 @@ class EpsSensor(CoordinatorEntity, SensorEntity):
             "name": f"EPS Smart Pool Control - {entry.data.get("serialnumber")}",
             "manufacturer": "Europe Pool Suppplies BV",
             "model": f"Smart Pool Control - {entry.data.get("serialnumber")}",
-            "via_device": (DOMAIN, entry.entry_id),
         }
