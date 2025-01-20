@@ -84,9 +84,9 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
         entry = self.coordinator.config_entry
         return {
             "identifiers": {(DOMAIN, entry.entry_id, entry.data.get("serialnumber"))},
-            "name": f"EPS Smart Pool Control - {entry.data.get("serialnumber")}",
+            "name": f"EPS Smart Pool Control - {entry.data.get('serialnumber')}",
             "manufacturer": "Europe Pool Suppplies BV",
-            "model": f"Smart Pool Control - {entry.data.get("serialnumber")}",
+            "model": f"Smart Pool Control - {entry.data.get('serialnumber')}",
         }
 
     def _get_nested_value(self, data: dict, key_path: str) -> str:
