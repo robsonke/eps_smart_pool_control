@@ -21,15 +21,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     # - clm_sensor_available
 
     sensors = [
-        EpsSensor(coordinator, "eps_pool_water_temperature", "Water Temperature", "°C", "realtimedata", "water_temperature", "mdi:thermometer"),
-        EpsSensor(coordinator, "eps_pool_ambient_temperature", "Ambient Temperature", "°C", "realtimedata", "ambient_temperature", "mdi:thermometer"),
-        EpsSensor(coordinator, "eps_pool_solar_temperature", "Solar Temperature", "°C", "realtimedata", "solar_temperature", "mdi:thermometer"),
-        EpsSensor(coordinator, "eps_pool_rx_level", "RX Level", None, "realtimedata", "rx_actual", "mdi:water-percent"),
-        EpsSensor(coordinator, "eps_pool_ph_level", "pH Level", None, "realtimedata", "ph_actual", "mdi:water-percent"),
+        EpsSensor(coordinator, "eps_pool_water_temperature", "Water Temperature", "°C", "realtimedata", "water_temperature", "mdi:thermometer", "temperature"),
+        EpsSensor(coordinator, "eps_pool_ambient_temperature", "Ambient Temperature", "°C", "realtimedata", "ambient_temperature", "mdi:thermometer", "temperature"),
+        EpsSensor(coordinator, "eps_pool_solar_temperature", "Solar Temperature", "°C", "realtimedata", "solar_temperature", "mdi:thermometer", "temperature"),
+        EpsSensor(coordinator, "eps_pool_rx_level", "RX Level", "mV", "realtimedata", "rx_actual", "mdi:water-percent"),
+        EpsSensor(coordinator, "eps_pool_ph_level", "pH Level", None, "realtimedata", "ph_actual", "mdi:water-percent", "ph"),
         EpsSensor(coordinator, "eps_pool_filterpump_current", "Filter Pump", None, "realtimedata", "filterpump_current", "mdi:water-pump"),
-        EpsSensor(coordinator, "eps_imx_temperature", "IMX Temperature", "°C", "realtimedata", "imx_temperature", "mdi:thermometer"),
-        EpsSensor(coordinator, "eps_main_temperature", "Main Temperature", "°C", "realtimedata", "main_temperature", "mdi:thermometer"),
-        EpsSensor(coordinator, "eps_pool_volume_m3", "Pool Volume", "M3", "configuration", "volume_pool_m3", "mdi:image-size-select-small"),
+        EpsSensor(coordinator, "eps_imx_temperature", "IMX Temperature", "°C", "realtimedata", "imx_temperature", "mdi:thermometer", "temperature"),
+        EpsSensor(coordinator, "eps_main_temperature", "Main Temperature", "°C", "realtimedata", "main_temperature", "mdi:thermometer", "temperature"),
+        EpsSensor(coordinator, "eps_pool_volume_m3", "Pool Volume", "m³", "configuration", "volume_pool_m3", "mdi:image-size-select-small", "volume_storage"),
     ]
 
     async_add_entities(sensors, update_before_add=True)
@@ -38,12 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
 class EpsSensor(CoordinatorEntity, SensorEntity):
     """Representation of an EPS Smart Pool Control sensor."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, unit_of_measurement: str, data_key: str, api_field: str, icon: str) -> None:
+    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, unit_of_measurement: str, data_key: str, api_field: str, icon: str, device_class: str | None = None) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._data_key = data_key
         self._api_field = api_field
         self._icon = icon
+        self._device_class = device_class
 
         self._sensor_type = sensor_type
         self._attr_name = name
@@ -74,6 +75,11 @@ class EpsSensor(CoordinatorEntity, SensorEntity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this sensor."""
         return self._attr_unit_of_measurement
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of this sensor."""
+        return self._device_class
 
     @property
     def device_info(self) -> DeviceInfo:
