@@ -12,6 +12,6 @@
   "issue_tracker": "https://github.com/robsonke/eps_smart_pool_control/issues",
   "requirements": [],
   "ssdp": [],
-  "version": "0.0.2",
+  "version": "0.0.4",
   "zeroconf": []
 }
