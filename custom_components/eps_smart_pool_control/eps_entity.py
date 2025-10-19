@@ -1,7 +1,7 @@
 """The EpsDataUpdateCoordinator class which manages fetching data from the EPS Smart Pool Control API."""
 
-import logging
 from datetime import timedelta
+import logging
 from typing import Never
 
 from homeassistant.config_entries import ConfigEntry
@@ -47,7 +47,9 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch realtime data from the API."""
         try:
             session = async_get_clientsession(self.hass)
-            async with session.get(f"https://api.smartpoolcontrol.eu/publicapi/{path}?serialnumber={self.serialnumber}&api_key={self.api_key}") as response:
+            async with session.get(
+                f"https://api.smartpoolcontrol.eu/publicapi/{path}?serialnumber={self.serialnumber}&api_key={self.api_key}"
+            ) as response:
                 if not response.ok:
                     self._raise_update_failed(response)
                 response_json = await response.json()
@@ -88,7 +90,9 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
     async def _get_pool_id(self) -> str:
         """Get the pool id from the status endpoint."""
         session = async_get_clientsession(self.hass)
-        async with session.get(f"https://api.smartpoolcontrol.eu/publicapi/status?serialnumber={self.serialnumber}&api_key={self.api_key}") as response:
+        async with session.get(
+            f"https://api.smartpoolcontrol.eu/publicapi/status?serialnumber={self.serialnumber}&api_key={self.api_key}"
+        ) as response:
             if not response.ok:
                 self._raise_update_failed(response)
             return (await response.json())[0]["id"]

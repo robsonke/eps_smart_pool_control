@@ -54,6 +54,10 @@ Once installed, you can access the EPS Smart Pool Control component from the Hom
 
 Contributions are welcome! Please submit a pull request or open an issue to discuss any changes.
 
+## Local Development
+
+To develop this integration locally, follow [this guide](https://developers.home-assistant.io/docs/development_environment/).
+
 ## Run pre-commit
 ```
 pre-commit run --all-files

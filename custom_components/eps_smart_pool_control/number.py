@@ -1,5 +1,6 @@
 """The number implementation for the EPS Smart Pool Control integration."""
 
+from config.custom_components.eps_smart_pool_control.eps_entity import EpsEntity
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -11,22 +12,63 @@ from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up EPS Smart Pool Control number based on a config entry."""
-    coordinator: EpsDataUpdateCoordinator = entry.runtime_data
+    # coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
+    # Temporary disabled, the POST/PUT API calls are not available anymore
     numbers = [
-        EpsNumber(coordinator, "eps_pool_rx_target_value", "RX Target", "settings", "settings_rx.rx_value_target", "mdi:water-percent", 500, 1000),
-        EpsNumber(coordinator, "eps_pool_pk_target_value", "PH Target", "settings", "settings_ph.ph_value_target", "mdi:water-percent", 0, 14),
+        # EpsNumber(
+        #     coordinator,
+        #     "eps_pool_rx_target_value",
+        #     "RX Target",
+        #     "settings",
+        #     "settings_rx.rx_value_target",
+        #     "mdi:water-percent",
+        #     500,
+        #     1000,
+        # ),
+        # EpsNumber(
+        #     coordinator,
+        #     "eps_pool_pk_target_value",
+        #     "PH Target",
+        #     "settings",
+        #     "settings_ph.ph_value_target",
+        #     "mdi:water-percent",
+        #     0,
+        #     14,
+        # ),
+        # EpsNumber(
+        #     coordinator,
+        #     "eps_pool_temperature_water_target",
+        #     "Water Temperature Target",
+        #     "settings",
+        #     "settings_temperature.temperature_water_target",
+        #     "mdi:thermometer-water",
+        #     0,
+        #     40,
+        # ),
     ]
 
     async_add_entities(numbers, update_before_add=True)
 
 
-class EpsNumber(CoordinatorEntity, NumberEntity):
+class EpsNumber(EpsEntity, NumberEntity):
     """Representation of an EPS Smart Pool Control Number."""
 
-    def __init__(self, coordinator: EpsDataUpdateCoordinator, sensor_type: str, name: str, data_key: str, api_field: str, icon: str, min_value: float, max_value: float) -> None:
+    def __init__(
+        self,
+        coordinator: EpsDataUpdateCoordinator,
+        sensor_type: str,
+        name: str,
+        data_key: str,
+        api_field: str,
+        icon: str,
+        min_value: float,
+        max_value: float,
+    ) -> None:
         """Initialize the number entity."""
         super().__init__(coordinator)
         self._data_key = data_key
@@ -41,7 +83,9 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
     @property
     def state(self) -> float | None:
         """Return the state of the sensor."""
-        return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+        return self._get_nested_value(
+            self.coordinator.data[self._data_key], self._api_field
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value through the api."""
@@ -77,24 +121,3 @@ class EpsNumber(CoordinatorEntity, NumberEntity):
     def native_max_value(self) -> float:
         """Return the maximum value of the number entity."""
         return self._max_value
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        entry = self.coordinator.config_entry
-        return {
-            "identifiers": {(DOMAIN, entry.entry_id, entry.data.get("serialnumber"))},
-            "name": f"EPS Smart Pool Control - {entry.data.get('serialnumber')}",
-            "manufacturer": "Europe Pool Suppplies BV",
-            "model": f"Smart Pool Control - {entry.data.get('serialnumber')}",
-        }
-
-    def _get_nested_value(self, data: dict, key_path: str) -> str:
-        """Access nested dictionary fields using a dot-separated string."""
-        keys = key_path.split(".")
-        value = data
-        for key in keys:
-            value = value.get(key)
-            if value is None:
-                return None
-        return value
