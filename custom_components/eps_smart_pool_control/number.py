@@ -12,9 +12,7 @@ from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control number based on a config entry."""
     # coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -83,9 +81,7 @@ class EpsNumber(EpsEntity, NumberEntity):
     @property
     def state(self) -> float | None:
         """Return the state of the sensor."""
-        return self._get_nested_value(
-            self.coordinator.data[self._data_key], self._api_field
-        )
+        return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value through the api."""

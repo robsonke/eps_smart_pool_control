@@ -12,9 +12,7 @@ from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control binary sensor based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -88,9 +86,7 @@ class EpsBinarySensor(EpsEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self._get_nested_value(
-            self.coordinator.data[self._data_key], self._api_field
-        )
+        return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
 
     @property
     def unique_id(self) -> str:

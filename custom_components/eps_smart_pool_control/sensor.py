@@ -17,9 +17,7 @@ from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control sensor based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -236,9 +234,7 @@ class EpsSensor(EpsEntity, SensorEntity):
     @property
     def state(self) -> str:
         """Return the state of the sensor."""
-        value = self._get_nested_value(
-            self.coordinator.data[self._data_key], self._api_field
-        )
+        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
         if self._options and isinstance(value, int):
             try:
                 return self._options[value]
@@ -253,9 +249,7 @@ class EpsSensor(EpsEntity, SensorEntity):
 
         # Add extra attributes in case of ENUM sensor
         if self._options:
-            value = self._get_nested_value(
-                self.coordinator.data[self._data_key], self._api_field
-            )
+            value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
             if value is not None:
                 attributes["raw_value"] = value
             attributes["options"] = self._options

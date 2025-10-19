@@ -13,9 +13,7 @@ from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control switch based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
@@ -85,9 +83,7 @@ class EpsSwitch(EpsEntity, SwitchEntity):
         """Return true if the switch is on."""
         # return self.coordinator.data[self._data_key][self._settings_group][self._api_field]
         # return self.coordinator.data[self._data_key][self._api_field]
-        return self._get_nested_value(
-            self.coordinator.data[self._data_key], self._api_field
-        )
+        return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
 
     @property
     def unique_id(self) -> str:
