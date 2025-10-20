@@ -1,16 +1,13 @@
 # In switch.py
 """The switch implementation for the EPS Smart Pool Control integration."""
 
-from config.custom_components.eps_smart_pool_control.eps_entity import EpsEntity
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
+from .eps_entity import EpsEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
@@ -81,8 +78,6 @@ class EpsSwitch(EpsEntity, SwitchEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        # return self.coordinator.data[self._data_key][self._settings_group][self._api_field]
-        # return self.coordinator.data[self._data_key][self._api_field]
         return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
 
     @property

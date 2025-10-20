@@ -1,20 +1,12 @@
 """The sensor implementation for the EPS Smart Pool Control integration."""
 
-from config.custom_components.eps_smart_pool_control.eps_entity import EpsEntity
-from config.custom_components.eps_smart_pool_control.number import EpsNumber
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    cached_property,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
+from .eps_entity import EpsEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
