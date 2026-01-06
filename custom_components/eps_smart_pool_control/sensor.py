@@ -116,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "cover",
             "mdi:arrow-expand-horizontal",
             device_class=SensorDeviceClass.ENUM,
-            options=["unknown", "open", "closed", "opening", "closing", "semi open"],
+            options={0: "unknown", 1: "open", 2: "closed", 3: "opening", 4: "closing", 5: "semi open"},
         ),
         EpsSensor(
             coordinator,
@@ -127,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "pumpspeed",
             "mdi:speedometer",
             device_class=SensorDeviceClass.ENUM,
-            options=["unknown", "low", "medium", "high"],
+            options={0: "off", 1: "low", 2: "medium", 3: "high"},
         ),
         EpsSensor(
             coordinator,
@@ -138,19 +138,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "pump",
             "mdi:water-pump",
             device_class=SensorDeviceClass.ENUM,
-            options=[
-                "unknown",
-                "scheme 1 active",
-                "scheme 2 active",
-                "scheme 3 active",
-                "unknown",
-                "unknown",
-                "unknown",
-                "unknown",
-                "unknown",
-                "unknown",
-                "always on active",
-            ],
+            options={
+                0: "off",
+                1: "scheme 1 active",
+                2: "scheme 2 active",
+                3: "scheme 3 active",
+                4: "unknown",
+                5: "unknown",
+                6: "unknown",
+                7: "unknown",
+                8: "unknown",
+                9: "unknown",
+                10: "always on active",
+            },
         ),
         EpsSensor(
             coordinator,
@@ -190,6 +190,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "settings_temperature.temperature_water_target",
             "mdi:thermometer-water",
         ),
+        EpsSensor(
+            coordinator,
+            "eps_pool_temperature",
+            "Temperature",
+            None,
+            "status",
+            "temperature",
+            "mdi:thermometer",
+            device_class=SensorDeviceClass.ENUM,
+            options={-1: "unsupported", 0: "heating off", 1: "no flow", 2: "heating on"},
+        ),
+        EpsSensor(
+            coordinator,
+            "eps_pool_lighting",
+            "Lighting",
+            None,
+            "status",
+            "lighting",
+            "mdi:lightbulb",
+            device_class=SensorDeviceClass.ENUM,
+            options={-1: "unsupported", 0: "off", 1: "unknown", 2: "on"},
+        ),
     ]
 
     async_add_entities(sensors, update_before_add=True)
@@ -208,7 +230,7 @@ class EpsSensor(EpsEntity, SensorEntity):
         api_field: str,
         icon: str,
         device_class: str | None = None,
-        options: list[str] | None = None,
+        options: dict[int, str] | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -228,10 +250,7 @@ class EpsSensor(EpsEntity, SensorEntity):
         """Return the state of the sensor."""
         value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
         if self._options and isinstance(value, int):
-            try:
-                return self._options[value]
-            except IndexError:
-                return "unknown"
+            return self._options.get(value, "unknown")
         return value
 
     @property
@@ -244,7 +263,7 @@ class EpsSensor(EpsEntity, SensorEntity):
             value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
             if value is not None:
                 attributes["raw_value"] = value
-            attributes["options"] = self._options
+            attributes["options"] = list(self._options.values())
         return attributes
 
     @property

@@ -1,5 +1,7 @@
 """The binary sensor implementation for the EPS Smart Pool Control integration."""
 
+from datetime import UTC, datetime, timedelta
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -54,6 +56,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "flow",
             "mdi:waves-arrow-right",
         ),
+        EpsPoolOnlineBinarySensor(
+            coordinator,
+            "eps_pool_online",
+            "Pool Online",
+            "status",
+            "datetime",
+            "mdi:wifi",
+        ),
     ]
 
     async_add_entities(binary_sensors, update_before_add=True)
@@ -94,3 +104,57 @@ class EpsBinarySensor(EpsEntity, BinarySensorEntity):
     def icon(self) -> str:
         """Return the icon of the sensor."""
         return self._icon
+
+
+class EpsPoolOnlineBinarySensor(EpsBinarySensor):
+    """Representation of the EPS Pool Online binary sensor."""
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the datetime field is within the last 4 hours."""
+        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+
+        if value is None or value == "0000-00-00 00:00:00":
+            return False
+
+        try:
+            # Parse the datetime string (format: '2025-10-10T09:01:18.719000Z')
+            last_update = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            current_time = datetime.now(UTC)
+            time_diff = current_time - last_update
+
+            # Return True if the last update was within the last 4 hours
+            return time_diff <= timedelta(hours=4)
+        except (ValueError, AttributeError):
+            # If parsing fails, return False
+            return False
+
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of this sensor."""
+        return "connectivity"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, any]:
+        """Return additional state attributes."""
+        attributes = {}
+        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+
+        if value and value != "0000-00-00 00:00:00":
+            try:
+                last_update = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                current_time = datetime.now(UTC)
+                time_diff = current_time - last_update
+
+                # Add last update as datetime object for Home Assistant
+                attributes["last_update_timestamp"] = last_update
+
+                # Add human-readable time difference
+                hours = int(time_diff.total_seconds() // 3600)
+                minutes = int((time_diff.total_seconds() % 3600) // 60)
+                attributes["time_since_update"] = f"{hours}h {minutes}m"
+
+            except (ValueError, AttributeError):
+                pass
+
+        return attributes
