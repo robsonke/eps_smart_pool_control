@@ -76,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "realtimedata",
             "filterpump_current",
             "mdi:water-pump",
+            "power",
         ),
         EpsSensor(
             coordinator,
@@ -180,6 +181,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "settings",
             "settings_ph.ph_value_target",
             "mdi:water-percent",
+            device_class="ph",
         ),
         EpsSensor(
             coordinator,
@@ -189,6 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "settings",
             "settings_temperature.temperature_water_target",
             "mdi:thermometer-water",
+            device_class="temperature",
         ),
         EpsSensor(
             coordinator,
@@ -290,3 +293,10 @@ class EpsSensor(EpsEntity, SensorEntity):
     def device_class(self) -> str | None:
         """Return the device class of this sensor."""
         return self._device_class
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the registry."""
+        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+        # Disable in case the value is -1 (unsupported)
+        return value != -1

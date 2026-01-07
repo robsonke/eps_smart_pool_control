@@ -61,19 +61,19 @@ class EpsSwitch(EpsEntity, SwitchEntity):
         switch_type: str,
         name: str,
         data_key: str,
-        # settings_group: str,
         api_field: str,
         icon: str,
     ) -> None:
         """Initialize the switch."""
         super().__init__(coordinator)
         self._data_key = data_key
-        # self._settings_group = settings_group
         self._api_field = api_field
         self._switch_type = switch_type
         self._attr_name = name
         self._icon = icon
         self.entity_id = f"switch.{self._switch_type}"
+        # disable these switch entities for now, till we have an API method to set them
+        self._attr_entity_registry_enabled_default = False
 
     @property
     def is_on(self) -> bool | None:

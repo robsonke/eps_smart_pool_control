@@ -23,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "realtimedata",
             "error",
             "mdi:alert-circle",
+            "problem",
         ),
         EpsBinarySensor(
             coordinator,
@@ -31,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "realtimedata",
             "empty_tank",
             "mdi:storage-tank-outline",
+            "problem",
         ),
         EpsBinarySensor(
             coordinator,
@@ -39,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "configuration",
             "is_dirty",
             "mdi:liquid-spot",
+            "problem",
         ),
         EpsBinarySensor(
             coordinator,
@@ -47,6 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "status",
             "cover_error",
             "mdi:alert-circle",
+            "problem",
         ),
         EpsBinarySensor(
             coordinator,
@@ -55,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "status",
             "flow",
             "mdi:waves-arrow-right",
+            "moving",
         ),
         EpsPoolOnlineBinarySensor(
             coordinator,
@@ -63,6 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "status",
             "datetime",
             "mdi:wifi",
+            "connectivity",
         ),
     ]
 
@@ -80,6 +86,7 @@ class EpsBinarySensor(EpsEntity, BinarySensorEntity):
         data_key: str,
         api_field: str,
         icon: str,
+        device_class: str | None = None,
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)
@@ -88,6 +95,7 @@ class EpsBinarySensor(EpsEntity, BinarySensorEntity):
         self._sensor_type = sensor_type
         self._attr_name = name
         self._icon = icon
+        self._device_class = device_class
         self.entity_id = f"binary_sensor.{self._sensor_type}"
 
     @property
@@ -105,6 +113,11 @@ class EpsBinarySensor(EpsEntity, BinarySensorEntity):
         """Return the icon of the sensor."""
         return self._icon
 
+    @property
+    def device_class(self) -> str | None:
+        """Return the device class of the sensor."""
+        return self._device_class
+
 
 class EpsPoolOnlineBinarySensor(EpsBinarySensor):
     """Representation of the EPS Pool Online binary sensor."""
@@ -119,7 +132,7 @@ class EpsPoolOnlineBinarySensor(EpsBinarySensor):
 
         try:
             # Parse the datetime string (format: '2025-10-10T09:01:18.719000Z')
-            last_update = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            last_update = datetime.fromisoformat(value.removesuffix("Z")).replace(tzinfo=UTC)
             current_time = datetime.now(UTC)
             time_diff = current_time - last_update
 
@@ -130,11 +143,6 @@ class EpsPoolOnlineBinarySensor(EpsBinarySensor):
             return False
 
     @property
-    def device_class(self) -> str | None:
-        """Return the device class of this sensor."""
-        return "connectivity"
-
-    @property
     def extra_state_attributes(self) -> dict[str, any]:
         """Return additional state attributes."""
         attributes = {}
@@ -142,7 +150,7 @@ class EpsPoolOnlineBinarySensor(EpsBinarySensor):
 
         if value and value != "0000-00-00 00:00:00":
             try:
-                last_update = datetime.fromisoformat(value.replace("Z", "+00:00"))
+                last_update = datetime.fromisoformat(value.removesuffix("Z")).replace(tzinfo=UTC)
                 current_time = datetime.now(UTC)
                 time_diff = current_time - last_update
 

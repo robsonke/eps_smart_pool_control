@@ -11,40 +11,39 @@ from .eps_entity import EpsEntity
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control number based on a config entry."""
-    # coordinator: EpsDataUpdateCoordinator = entry.runtime_data
+    coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
-    # Temporary disabled, the POST/PUT API calls are not available anymore
     numbers = [
-        # EpsNumber(
-        #     coordinator,
-        #     "eps_pool_rx_target_value",
-        #     "RX Target",
-        #     "settings",
-        #     "settings_rx.rx_value_target",
-        #     "mdi:water-percent",
-        #     500,
-        #     1000,
-        # ),
-        # EpsNumber(
-        #     coordinator,
-        #     "eps_pool_pk_target_value",
-        #     "PH Target",
-        #     "settings",
-        #     "settings_ph.ph_value_target",
-        #     "mdi:water-percent",
-        #     0,
-        #     14,
-        # ),
-        # EpsNumber(
-        #     coordinator,
-        #     "eps_pool_temperature_water_target",
-        #     "Water Temperature Target",
-        #     "settings",
-        #     "settings_temperature.temperature_water_target",
-        #     "mdi:thermometer-water",
-        #     0,
-        #     40,
-        # ),
+        EpsNumber(
+            coordinator,
+            "eps_pool_rx_target_value",
+            "RX Target",
+            "settings",
+            "settings_rx.rx_value_target",
+            "mdi:water-percent",
+            500,
+            1000,
+        ),
+        EpsNumber(
+            coordinator,
+            "eps_pool_pk_target_value",
+            "PH Target",
+            "settings",
+            "settings_ph.ph_value_target",
+            "mdi:water-percent",
+            0,
+            14,
+        ),
+        EpsNumber(
+            coordinator,
+            "eps_pool_temperature_water_target",
+            "Water Temperature Target",
+            "settings",
+            "settings_temperature.temperature_water_target",
+            "mdi:thermometer-water",
+            0,
+            40,
+        ),
     ]
 
     async_add_entities(numbers, update_before_add=True)
@@ -74,6 +73,8 @@ class EpsNumber(EpsEntity, NumberEntity):
         self._min_value = min_value
         self._max_value = max_value
         self.entity_id = f"number.{self._sensor_type}"
+        # disable these switch entities for now, till we have an API method to set them
+        self._attr_entity_registry_enabled_default = False
 
     @property
     def state(self) -> float | None:

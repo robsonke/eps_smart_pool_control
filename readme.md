@@ -8,6 +8,7 @@ They offer an online portal where you can monitor your pool as well, that's to b
 
 - Status overview of the most important data fields
 - Update of PH and RX target values
+- NOTE: switches and number entities are currently disabled, we are waiting for a new API from EPS that allows updating values
 
 ## Example data
 
