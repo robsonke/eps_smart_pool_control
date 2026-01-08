@@ -149,7 +149,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 6: "unknown",
                 7: "unknown",
                 8: "unknown",
-                9: "unknown",
+                9: "frost protection",
                 10: "always on active",
             },
         ),
