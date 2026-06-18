@@ -5,7 +5,7 @@
         "title": "Configure EPS Smart Pool Control",
         "data": {
           "api_key": "API Key",
-          "serialnumber": "Serial Number"
+          "mac_address": "MAC Address"
         }
       }
     },

@@ -1,58 +1,50 @@
-# In switch.py
 """The switch implementation for the EPS Smart Pool Control integration."""
 
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from __future__ import annotations
 
-from .coordinator import EpsDataUpdateCoordinator
+from typing import TYPE_CHECKING
+
+from homeassistant.components.switch import SwitchEntity
+
 from .eps_entity import EpsEntity
 
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+    from .coordinator import EpsDataUpdateCoordinator
+
+
+def _build_patch_body(path: str, value: object) -> dict:
+    """Build a nested PATCH body dict from a dot-separated path and value."""
+    keys = path.split(".")
+    body: dict = {}
+    current = body
+    for i, key in enumerate(keys):
+        if i == len(keys) - 1:
+            current[key] = value
+        else:
+            current[key] = {}
+            current = current[key]
+    return body
+
+
+async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control switch based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
     switches = [
-        EpsSwitch(
-            coordinator,
-            "eps_filterschedule1_enabled",
-            "Filter Schedule 1",
-            "settings",
-            "settings_filterschedule1.filterschedule1_enabled",
-            "mdi:pump",
-        ),
-        EpsSwitch(
-            coordinator,
-            "eps_filterschedule2_enabled",
-            "Filter Schedule 2",
-            "settings",
-            "settings_filterschedule2.filterschedule2_enabled",
-            "mdi:pump",
-        ),
-        EpsSwitch(
-            coordinator,
-            "eps_filterschedule3_enabled",
-            "Filter Schedule 3",
-            "settings",
-            "settings_filterschedule3.filterschedule3_enabled",
-            "mdi:pump",
-        ),
-        EpsSwitch(
-            coordinator,
-            "eps_filter_pump_force",
-            "Filter Pump Force On",
-            "settings",
-            "settings_filter.filter_pump_force_on",
-            "mdi:pump",
-        ),
+        EpsSwitch(coordinator, "eps_filterschedule1_enabled", "Filter Schedule 1", "filter", "config.schedule_1.enabled", "mdi:pump"),
+        EpsSwitch(coordinator, "eps_filterschedule2_enabled", "Filter Schedule 2", "filter", "config.schedule_2.enabled", "mdi:pump"),
+        EpsSwitch(coordinator, "eps_filterschedule3_enabled", "Filter Schedule 3", "filter", "config.schedule_3.enabled", "mdi:pump"),
+        EpsSwitch(coordinator, "eps_filter_pump_force", "Filter Pump Force On", "filter", "config.always_active", "mdi:pump"),
     ]
 
     async_add_entities(switches, update_before_add=True)
 
 
-class EpsSwitch(EpsEntity, SwitchEntity):
+class EpsSwitch(EpsEntity, SwitchEntity):  # type: ignore[misc]
     """Representation of an EPS Smart Pool Control switch."""
 
     def __init__(
@@ -68,38 +60,31 @@ class EpsSwitch(EpsEntity, SwitchEntity):
         super().__init__(coordinator)
         self._data_key = data_key
         self._api_field = api_field
-        self._switch_type = switch_type
         self._attr_name = name
-        self._icon = icon
-        self.entity_id = f"switch.{self._switch_type}"
-        # disable these switch entities for now, till we have an API method to set them
-        self._attr_entity_registry_enabled_default = False
+        self._attr_icon = icon
+        entry_id = coordinator.config_entry.entry_id if coordinator.config_entry else ""
+        self._attr_unique_id = f"{entry_id}_{switch_type}"
+        self.entity_id = f"switch.{switch_type}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool | None:  # type: ignore[override]
         """Return true if the switch is on."""
-        return self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+        return bool(value) if value is not None else None
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID for the switch."""
-        return f"{self.coordinator.config_entry.entry_id}_{self._switch_type}"
+    def entity_registry_enabled_default(self) -> bool:  # type: ignore[override]
+        """Disable entities belonging to modules the device reports as unsupported (status -1)."""
+        return self._is_module_enabled(self._data_key)
 
-    @property
-    def icon(self) -> str:
-        """Return the icon of the switch."""
-        return self._icon
+    async def async_turn_on(self, **_kwargs: object) -> None:
+        """Turn the switch on."""
+        write_path = self._api_field.removeprefix("config.")
+        await self.coordinator.set_value(self._data_key, _build_patch_body(write_path, True))  # noqa: FBT003
+        await self.coordinator.async_request_refresh()
 
-    # async def async_turn_on(self, **kwargs) -> None:
-    #     """Turn the switch on."""
-    #     await self.coordinator.api.update_setting(
-    #         self._settings_group, {self._api_field: True}
-    #     )
-    #     await self.coordinator.async_request_refresh()
-
-    # async def async_turn_off(self, **kwargs) -> None:
-    #     """Turn the switch off."""
-    #     await self.coordinator.api.update_setting(
-    #         self._settings_group, {self._api_field: False}
-    #     )
-    #     await self.coordinator.async_request_refresh()
+    async def async_turn_off(self, **_kwargs: object) -> None:
+        """Turn the switch off."""
+        write_path = self._api_field.removeprefix("config.")
+        await self.coordinator.set_value(self._data_key, _build_patch_body(write_path, False))  # noqa: FBT003
+        await self.coordinator.async_request_refresh()

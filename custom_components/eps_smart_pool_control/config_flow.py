@@ -3,27 +3,15 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
-
 _LOGGER = logging.getLogger(__name__)
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect."""
-    api_key = data[CONF_API_KEY]
-    serialnumber = data["serialnumber"]
-
-    return {"title": "EPS Smart Pool Control", api_key: api_key, "serialnumber": serialnumber}
 
 
 class EpsConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -37,25 +25,20 @@ class EpsConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
+                return self.async_create_entry(title="EPS Smart Pool Control", data=user_input)
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(title="EPS Smart Pool Control", data=user_input)
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Required("api_key"): str,
-                    vol.Required("serialnumber"): str,
+                    vol.Required("mac_address"): str,
                 }
             ),
+            errors=errors,
         )
 
 

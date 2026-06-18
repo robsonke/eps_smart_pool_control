@@ -1,131 +1,40 @@
 """The sensor implementation for the EPS Smart Pool Control integration."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from __future__ import annotations
 
-from .coordinator import EpsDataUpdateCoordinator
+from typing import TYPE_CHECKING
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+
 from .eps_entity import EpsEntity
 
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+    from .coordinator import EpsDataUpdateCoordinator
+
+
+async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
     """Set up EPS Smart Pool Control sensor based on a config entry."""
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
-    # consider making the sensor conditionally to the device config, with fields such as:
-    # - water_level_sensor_available
-    # - deck_available
-    # - clm_sensor_available
-
     sensors = [
-        EpsSensor(
-            coordinator,
-            "eps_pool_water_temperature",
-            "Water Temperature",
-            "°C",
-            "realtimedata",
-            "water_temperature",
-            "mdi:thermometer",
-            "temperature",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_ambient_temperature",
-            "Ambient Temperature",
-            "°C",
-            "realtimedata",
-            "ambient_temperature",
-            "mdi:thermometer",
-            "temperature",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_solar_temperature",
-            "Solar Temperature",
-            "°C",
-            "realtimedata",
-            "solar_temperature",
-            "mdi:thermometer",
-            "temperature",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_rx_level",
-            "RX Level",
-            "mV",
-            "realtimedata",
-            "rx_actual",
-            "mdi:water-percent",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_ph_level",
-            "pH Level",
-            None,
-            "realtimedata",
-            "ph_actual",
-            "mdi:water-percent",
-            "ph",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_filterpump_current",
-            "Filter Pump",
-            None,
-            "realtimedata",
-            "filterpump_current",
-            "mdi:water-pump",
-            "power",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_imx_temperature",
-            "IMX Temperature",
-            "°C",
-            "realtimedata",
-            "imx_temperature",
-            "mdi:thermometer",
-            "temperature",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_main_temperature",
-            "Main Temperature",
-            "°C",
-            "realtimedata",
-            "main_temperature",
-            "mdi:thermometer",
-            "temperature",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_volume_m3",
-            "Pool Volume",
-            "m³",
-            "configuration",
-            "volume_pool_m3",
-            "mdi:image-size-select-small",
-            "volume_storage",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_cover",
-            "Pool Cover",
-            None,
-            "status",
-            "cover",
-            "mdi:arrow-expand-horizontal",
-            device_class=SensorDeviceClass.ENUM,
-            options={0: "unknown", 1: "open", 2: "closed", 3: "opening", 4: "closing", 5: "semi open"},
-        ),
+        EpsSensor(coordinator, "eps_pool_water_temperature", "Water Temperature", "°C", "temperature", "metrics.water_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE),
+        EpsSensor(coordinator, "eps_pool_ambient_temperature", "Ambient Temperature", "°C", "temperature", "metrics.ambient_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE),
+        EpsSensor(coordinator, "eps_imx_temperature", "IMX Temperature", "°C", "temperature", "metrics.imx_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE),
+        EpsSensor(coordinator, "eps_pool_rx_level", "RX Level", "mV", "cl", "metrics.actual", "mdi:water-percent"),
+        EpsSensor(coordinator, "eps_pool_ph_level", "pH Level", None, "ph", "metrics.actual", "mdi:water-percent", SensorDeviceClass.PH),
+        EpsSensor(coordinator, "eps_pool_filterpump_current", "Filter Pump", "A", "filter", "metrics.pump_current", "mdi:water-pump", SensorDeviceClass.CURRENT),
+        EpsSensor(coordinator, "eps_pool_volume_m3", "Pool Volume", "m³", "spec", "pool_volume", "mdi:image-size-select-small", SensorDeviceClass.VOLUME_STORAGE),
         EpsSensor(
             coordinator,
             "eps_pool_pump_speed",
             "Pump Speed",
             None,
-            "status",
-            "pumpspeed",
+            "filter",
+            "metrics.pump_speed",
             "mdi:speedometer",
             device_class=SensorDeviceClass.ENUM,
             options={0: "off", 1: "low", 2: "medium", 3: "high"},
@@ -135,8 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "eps_pool_pump_mode",
             "Pump Mode",
             None,
-            "status",
-            "pump",
+            "filter",
+            "status.pump_status",
             "mdi:water-pump",
             device_class=SensorDeviceClass.ENUM,
             options={
@@ -153,53 +62,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
                 10: "always on active",
             },
         ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_backwash",
-            "Backwash",
-            None,
-            "status",
-            "backwash",
-            "mdi:skip-backward",
-            None,
-        ),
-        # Three temporary sensors, which are normally numbers
-        EpsSensor(
-            coordinator,
-            "eps_pool_rx_target_value",
-            "RX Target",
-            None,
-            "settings",
-            "settings_rx.rx_value_target",
-            "mdi:water-percent",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_pk_target_value",
-            "PH Target",
-            None,
-            "settings",
-            "settings_ph.ph_value_target",
-            "mdi:water-percent",
-            device_class="ph",
-        ),
-        EpsSensor(
-            coordinator,
-            "eps_pool_temperature_water_target",
-            "Water Temperature Target",
-            None,
-            "settings",
-            "settings_temperature.temperature_water_target",
-            "mdi:thermometer-water",
-            device_class="temperature",
-        ),
+        EpsSensor(coordinator, "eps_pool_backwash", "Backwash", None, "backwash", "status.status", "mdi:skip-backward"),
+        EpsSensor(coordinator, "eps_pool_rx_target_value", "RX Target", "mV", "cl", "config.rx.target", "mdi:water-percent"),
+        EpsSensor(coordinator, "eps_pool_pk_target_value", "PH Target", None, "ph", "config.target", "mdi:water-percent", SensorDeviceClass.PH),
+        EpsSensor(coordinator, "eps_pool_temperature_water_target", "Water Temperature Target", "°C", "temperature", "config.target", "mdi:thermometer-water", SensorDeviceClass.TEMPERATURE),
         EpsSensor(
             coordinator,
             "eps_pool_temperature",
             "Temperature",
             None,
-            "status",
             "temperature",
+            "status.status",
             "mdi:thermometer",
             device_class=SensorDeviceClass.ENUM,
             options={-1: "unsupported", 0: "heating off", 1: "no flow", 2: "heating on"},
@@ -209,8 +82,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
             "eps_pool_lighting",
             "Lighting",
             None,
-            "status",
             "lighting",
+            "status.status",
             "mdi:lightbulb",
             device_class=SensorDeviceClass.ENUM,
             options={-1: "unsupported", 0: "off", 1: "unknown", 2: "on"},
@@ -220,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities(sensors, update_before_add=True)
 
 
-class EpsSensor(EpsEntity, SensorEntity):
+class EpsSensor(EpsEntity, SensorEntity):  # type: ignore[misc]
     """Representation of an EPS Smart Pool Control sensor."""
 
     def __init__(
@@ -228,40 +101,40 @@ class EpsSensor(EpsEntity, SensorEntity):
         coordinator: EpsDataUpdateCoordinator,
         sensor_type: str,
         name: str,
-        unit_of_measurement: str,
+        unit_of_measurement: str | None,
         data_key: str,
         api_field: str,
         icon: str,
-        device_class: str | None = None,
+        device_class: SensorDeviceClass | None = None,
         options: dict[int, str] | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._data_key = data_key
         self._api_field = api_field
-        self._icon = icon
-        self._device_class = device_class
         self._options = options
-
-        self._sensor_type = sensor_type
         self._attr_name = name
-        self._attr_unit_of_measurement = unit_of_measurement
-        self.entity_id = f"sensor.{self._sensor_type}"
+        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_icon = icon
+        self._attr_device_class = device_class
+        entry_id = coordinator.config_entry.entry_id if coordinator.config_entry else ""
+        self._attr_unique_id = f"{entry_id}_{sensor_type}"
+        self.entity_id = f"sensor.{sensor_type}"
 
     @property
-    def state(self) -> str:
-        """Return the state of the sensor."""
+    def native_value(self) -> object:  # type: ignore[override]
+        """Return the sensor value, mapped through options for ENUM sensors."""
         value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
         if self._options and isinstance(value, int):
             return self._options.get(value, "unknown")
+        if isinstance(value, float):
+            return round(value, 1)
         return value
 
     @property
-    def extra_state_attributes(self) -> dict[str, any]:
-        """Return additional state attributes."""
-        attributes = {}
-
-        # Add extra attributes in case of ENUM sensor
+    def extra_state_attributes(self) -> dict[str, object]:  # type: ignore[override]
+        """Return raw value and option list for ENUM sensors."""
+        attributes: dict[str, object] = {}
         if self._options:
             value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
             if value is not None:
@@ -270,33 +143,6 @@ class EpsSensor(EpsEntity, SensorEntity):
         return attributes
 
     @property
-    def unique_id(self) -> str:
-        """Return a unique ID for this entity."""
-        return f"{self.coordinator.config_entry.entry_id}_{self._sensor_type}"
-
-    @property
-    def icon(self) -> str:
-        """Return the icon of the sensor."""
-        return self._icon
-
-    @property
-    def unit(self) -> str:
-        """Unit of this sensor."""
-        return self._attr_unit_of_measurement
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit of measurement of this sensor."""
-        return self._attr_unit_of_measurement
-
-    @property
-    def device_class(self) -> str | None:
-        """Return the device class of this sensor."""
-        return self._device_class
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added to the registry."""
-        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
-        # Disable in case the value is -1 (unsupported)
-        return value != -1
+    def entity_registry_enabled_default(self) -> bool:  # type: ignore[override]
+        """Disable entities belonging to modules the device reports as unsupported (status -1)."""
+        return self._is_module_enabled(self._data_key)
