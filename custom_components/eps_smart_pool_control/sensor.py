@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 
 from .eps_entity import EpsEntity
 
@@ -21,13 +21,39 @@ async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_
     coordinator: EpsDataUpdateCoordinator = entry.runtime_data
 
     sensors = [
-        EpsSensor(coordinator, "eps_pool_water_temperature", "Water Temperature", "°C", "temperature", "metrics.water_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE),
-        EpsSensor(coordinator, "eps_pool_ambient_temperature", "Ambient Temperature", "°C", "temperature", "metrics.ambient_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE),
-        EpsSensor(coordinator, "eps_imx_temperature", "IMX Temperature", "°C", "temperature", "metrics.imx_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE),
-        EpsSensor(coordinator, "eps_pool_rx_level", "RX Level", "mV", "cl", "metrics.actual", "mdi:water-percent"),
-        EpsSensor(coordinator, "eps_pool_ph_level", "pH Level", None, "ph", "metrics.actual", "mdi:water-percent", SensorDeviceClass.PH),
-        EpsSensor(coordinator, "eps_pool_filterpump_current", "Filter Pump", "A", "filter", "metrics.pump_current", "mdi:water-pump", SensorDeviceClass.CURRENT),
-        EpsSensor(coordinator, "eps_pool_volume_m3", "Pool Volume", "m³", "spec", "pool_volume", "mdi:image-size-select-small", SensorDeviceClass.VOLUME_STORAGE),
+        EpsSensor(
+            coordinator,
+            "eps_pool_water_temperature",
+            "Water Temperature",
+            "°C",
+            "temperature",
+            "metrics.water_temp",
+            "mdi:thermometer",
+            SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        EpsSensor(
+            coordinator,
+            "eps_pool_ambient_temperature",
+            "Ambient Temperature",
+            "°C",
+            "temperature",
+            "metrics.ambient_temp",
+            "mdi:thermometer",
+            SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        EpsSensor(
+            coordinator, "eps_imx_temperature", "IMX Temperature", "°C", "temperature", "metrics.imx_temp", "mdi:thermometer", SensorDeviceClass.TEMPERATURE, state_class=SensorStateClass.MEASUREMENT
+        ),
+        EpsSensor(coordinator, "eps_pool_rx_level", "RX Level", "mV", "cl", "metrics.actual", "mdi:water-percent", state_class=SensorStateClass.MEASUREMENT),
+        EpsSensor(coordinator, "eps_pool_ph_level", "pH Level", None, "ph", "metrics.actual", "mdi:water-percent", SensorDeviceClass.PH, state_class=SensorStateClass.MEASUREMENT),
+        EpsSensor(
+            coordinator, "eps_pool_filterpump_current", "Filter Pump", "A", "filter", "metrics.pump_current", "mdi:water-pump", SensorDeviceClass.CURRENT, state_class=SensorStateClass.MEASUREMENT
+        ),
+        EpsSensor(
+            coordinator, "eps_pool_volume_m3", "Pool Volume", "m³", "spec", "pool_volume", "mdi:image-size-select-small", SensorDeviceClass.VOLUME_STORAGE, state_class=SensorStateClass.MEASUREMENT
+        ),
         EpsSensor(
             coordinator,
             "eps_pool_pump_speed",
@@ -107,6 +133,7 @@ class EpsSensor(EpsEntity, SensorEntity):  # type: ignore[misc]
         icon: str,
         device_class: SensorDeviceClass | None = None,
         options: dict[int, str] | None = None,
+        state_class: SensorStateClass | None = None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -117,6 +144,8 @@ class EpsSensor(EpsEntity, SensorEntity):  # type: ignore[misc]
         self._attr_native_unit_of_measurement = unit_of_measurement
         self._attr_icon = icon
         self._attr_device_class = device_class
+        self._attr_state_class = state_class
+        self._attr_options = list(options.values()) if options else None
         entry_id = coordinator.config_entry.entry_id if coordinator.config_entry else ""
         self._attr_unique_id = f"{entry_id}_{sensor_type}"
         self.entity_id = f"sensor.{sensor_type}"
@@ -124,7 +153,7 @@ class EpsSensor(EpsEntity, SensorEntity):  # type: ignore[misc]
     @property
     def native_value(self) -> object:  # type: ignore[override]
         """Return the sensor value, mapped through options for ENUM sensors."""
-        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+        value = self._get_nested_value(self.coordinator.data.get(self._data_key, {}), self._api_field)
         if self._options and isinstance(value, int):
             return self._options.get(value, "unknown")
         if isinstance(value, float):
@@ -136,7 +165,7 @@ class EpsSensor(EpsEntity, SensorEntity):  # type: ignore[misc]
         """Return raw value and option list for ENUM sensors."""
         attributes: dict[str, object] = {}
         if self._options:
-            value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+            value = self._get_nested_value(self.coordinator.data.get(self._data_key, {}), self._api_field)
             if value is not None:
                 attributes["raw_value"] = value
             attributes["options"] = list(self._options.values())

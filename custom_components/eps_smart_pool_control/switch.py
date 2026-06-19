@@ -69,7 +69,7 @@ class EpsSwitch(EpsEntity, SwitchEntity):  # type: ignore[misc]
     @property
     def is_on(self) -> bool | None:  # type: ignore[override]
         """Return true if the switch is on."""
-        value = self._get_nested_value(self.coordinator.data[self._data_key], self._api_field)
+        value = self._get_nested_value(self.coordinator.data.get(self._data_key, {}), self._api_field)
         return bool(value) if value is not None else None
 
     @property
@@ -81,10 +81,8 @@ class EpsSwitch(EpsEntity, SwitchEntity):  # type: ignore[misc]
         """Turn the switch on."""
         write_path = self._api_field.removeprefix("config.")
         await self.coordinator.set_value(self._data_key, _build_patch_body(write_path, True))  # noqa: FBT003
-        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **_kwargs: object) -> None:
         """Turn the switch off."""
         write_path = self._api_field.removeprefix("config.")
         await self.coordinator.set_value(self._data_key, _build_patch_body(write_path, False))  # noqa: FBT003
-        await self.coordinator.async_request_refresh()

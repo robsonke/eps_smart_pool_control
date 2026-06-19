@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
-from .const import COORDINATOR, DOMAIN
+from .const import DOMAIN
 from .coordinator import EpsDataUpdateCoordinator
 
 if TYPE_CHECKING:
@@ -31,8 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
-    hass.data[DOMAIN][COORDINATOR] = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -41,9 +39,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up the EPS Smart Pool Control component."""
-    hass.data[DOMAIN] = {}
-    return True

@@ -7,6 +7,7 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Never
 
 import aiohttp
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -96,11 +97,20 @@ class EpsDataUpdateCoordinator(DataUpdateCoordinator):
     async def set_value(self, module: str, data: dict) -> None:
         """PATCH a partial update to a pool module endpoint."""
         session = async_get_clientsession(self.hass)
-        async with session.patch(
-            f"{_API_BASE}/pool/{self.pid}/{module}",
-            headers={"X-API-Key": self.api_key},
-            json=data,
-        ) as response:
-            if not response.ok:
-                await self._raise_update_failed(response)
+        error_msg: str | None = None
+        try:
+            async with session.patch(
+                f"{_API_BASE}/pool/{self.pid}/{module}",
+                headers={"X-API-Key": self.api_key},
+                json=data,
+            ) as response:
+                if not response.ok:
+                    body = await response.text()
+                    error_msg = f"PATCH {module} failed: {response.status} {response.reason} — {body}"
+        except Exception as err:
+            msg = f"Error writing to {module}: {err}"
+            raise HomeAssistantError(msg) from err
+        if error_msg:
+            _LOGGER.error(error_msg)
+            raise HomeAssistantError(error_msg)
         await self.async_request_refresh()
