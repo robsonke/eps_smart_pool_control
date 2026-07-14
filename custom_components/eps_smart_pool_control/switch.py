@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 from typing import TYPE_CHECKING
 
 from homeassistant.components.switch import SwitchEntity
@@ -16,18 +17,13 @@ if TYPE_CHECKING:
     from .coordinator import EpsDataUpdateCoordinator
 
 
-def _build_patch_body(path: str, value: object) -> dict:
-    """Build a nested PATCH body dict from a dot-separated path and value."""
+def _set_nested_value(data: dict, path: str, value: object) -> None:
+    """Set a value in a nested dict in-place using a dot-separated path, creating intermediate dicts as needed."""
     keys = path.split(".")
-    body: dict = {}
-    current = body
-    for i, key in enumerate(keys):
-        if i == len(keys) - 1:
-            current[key] = value
-        else:
-            current[key] = {}
-            current = current[key]
-    return body
+    current = data
+    for key in keys[:-1]:
+        current = current.setdefault(key, {})
+    current[keys[-1]] = value
 
 
 async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
@@ -79,10 +75,16 @@ class EpsSwitch(EpsEntity, SwitchEntity):  # type: ignore[misc]
 
     async def async_turn_on(self, **_kwargs: object) -> None:
         """Turn the switch on."""
-        write_path = self._api_field.removeprefix("config.")
-        await self.coordinator.set_value(self._data_key, _build_patch_body(write_path, True))  # noqa: FBT003
+        await self._async_set_value(value=True)
 
     async def async_turn_off(self, **_kwargs: object) -> None:
         """Turn the switch off."""
+        await self._async_set_value(value=False)
+
+    async def _async_set_value(self, *, value: bool) -> None:
+        """PATCH the full module config with the changed field merged in."""
+        # The API 422s on a single-field body (untagged enum deserialization needs the full config shape).
         write_path = self._api_field.removeprefix("config.")
-        await self.coordinator.set_value(self._data_key, _build_patch_body(write_path, False))  # noqa: FBT003
+        config = copy.deepcopy(self.coordinator.data.get(self._data_key, {}).get("config", {}))
+        _set_nested_value(config, write_path, value)
+        await self.coordinator.set_value(self._data_key, config)

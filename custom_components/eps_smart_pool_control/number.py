@@ -61,7 +61,7 @@ class EpsNumber(EpsEntity, NumberEntity):  # type: ignore[misc]
     def native_value(self) -> float | None:  # type: ignore[override]
         """Return the current value."""
         value = self._get_nested_value(self.coordinator.data.get(self._data_key, {}), self._api_field)
-        return float(value) if isinstance(value, int | float) else None
+        return round(value, 1) if isinstance(value, int | float) else None
 
     async def async_set_native_value(self, value: float) -> None:
         """PATCH the new value to the module config endpoint."""
