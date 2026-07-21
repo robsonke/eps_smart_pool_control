@@ -89,7 +89,7 @@ async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_
                 10: "active",
                 11: "cover",
                 12: "valve",
-                13: "too hot",
+                13: "cover closed",
                 14: "invalid",
             },
         ),
@@ -142,7 +142,7 @@ async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_
             "status.status",
             "mdi:water-percent",
             device_class=SensorDeviceClass.ENUM,
-            options={-1: "unsupported", -28: "dry run", 0: "ph ok", 1: "ph out of range"},
+            options={-1: "unsupported", -28: "dry run", 0: "ph ok", 103: "ph out of range", 104: "104", 201: "no flow"},
         ),
         EpsSensor(
             coordinator,
@@ -153,7 +153,7 @@ async def async_setup_entry(_hass: HomeAssistant, entry: ConfigEntry, async_add_
             "status.status",
             "mdi:water-percent",
             device_class=SensorDeviceClass.ENUM,
-            options={-1: "unsupported", -28: "dry run", 0: "cl ok", 1: "cl out of range"},
+            options={-1: "unsupported", -28: "dry run", 0: "cl ok", 103: "cl out of range", 104: "104", 201: "no flow"},
         ),
         EpsSensor(
             coordinator,
